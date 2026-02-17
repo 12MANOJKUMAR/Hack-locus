@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useApp } from '../context/AppContext'
 import Card from '../components/UI/Card'
 import ReviewCard from '../components/Review/ReviewCard'
@@ -6,9 +5,21 @@ import Button from '../components/UI/Button'
 import { useNavigate } from 'react-router-dom'
 
 const AdminPanel = () => {
-  const { getPendingReviews, updateReviewStatus, allBusinesses } = useApp()
+  const { getPendingReviews, updateReviewStatus, allBusinesses, user } = useApp()
   const navigate = useNavigate()
   const pendingReviews = getPendingReviews()
+
+  if (user?.role !== 'admin') {
+    return (
+      <div className="text-center py-12">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h2>
+        <p className="text-gray-600 mb-4">You need admin privileges to access this page.</p>
+        <Button variant="primary" onClick={() => navigate('/')}>
+          Back to Home
+        </Button>
+      </div>
+    )
+  }
 
   const handleApprove = (reviewId) => {
     updateReviewStatus(reviewId, 'approved')

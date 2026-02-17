@@ -1,9 +1,10 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
+import Button from '../UI/Button'
 
 const Layout = ({ children }) => {
   const location = useLocation()
-  const { user } = useApp()
+  const { user, isAuthenticated } = useApp()
 
   const isActive = (path) => location.pathname === path
 
@@ -26,7 +27,7 @@ const Layout = ({ children }) => {
               >
                 Browse
               </Link>
-              {user?.role === 'admin' && (
+              {isAuthenticated && user?.role === 'admin' && (
                 <Link
                   to="/admin"
                   className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -38,12 +39,32 @@ const Layout = ({ children }) => {
                   Admin Panel
                 </Link>
               )}
-              <div className="flex items-center gap-2 pl-6 border-l border-gray-300">
-                <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                  {user?.name?.charAt(0).toUpperCase() || 'U'}
+              {isAuthenticated ? (
+                <div className="flex items-center gap-4 pl-6 border-l border-gray-300">
+                  <Link
+                    to="/profile"
+                    className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                  >
+                    <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                      {user?.name?.charAt(0).toUpperCase() || 'U'}
+                    </div>
+                    <span className="text-sm text-gray-700">{user?.name || 'User'}</span>
+                  </Link>
                 </div>
-                <span className="text-sm text-gray-700">{user?.name || 'User'}</span>
-              </div>
+              ) : (
+                <div className="flex items-center gap-3 pl-6 border-l border-gray-300">
+                  <Link to="/login">
+                    <Button variant="secondary" size="sm">
+                      Sign In
+                    </Button>
+                  </Link>
+                  <Link to="/signup">
+                    <Button variant="primary" size="sm">
+                      Sign Up
+                    </Button>
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -123,17 +123,32 @@ const mockReviews = [
   }
 ]
 
-const mockUser = {
-  id: 'u1',
-  name: 'John Doe',
-  email: 'john@example.com',
-  role: 'user'
-}
+// Mock users database (in real app, this would be a backend)
+const mockUsers = [
+  {
+    id: 'u1',
+    name: 'John Doe',
+    email: 'john@example.com',
+    password: 'password123',
+    role: 'user'
+  },
+  {
+    id: 'u2',
+    name: 'Admin User',
+    email: 'admin@example.com',
+    password: 'admin123',
+    role: 'admin'
+  }
+]
 
 export const AppProvider = ({ children }) => {
   const [businesses, setBusinesses] = useState(mockBusinesses)
   const [reviews, setReviews] = useState(mockReviews)
-  const [user] = useState(mockUser)
+  const [user, setUser] = useState(() => {
+    // Check localStorage for saved user session
+    const savedUser = localStorage.getItem('user')
+    return savedUser ? JSON.parse(savedUser) : null
+  })
   const [filters, setFilters] = useState({
     category: 'all',
     location: '',
@@ -188,17 +203,70 @@ export const AppProvider = ({ children }) => {
     return reviews.filter(review => review.status === 'pending')
   }
 
+  const login = (email, password) => {
+    const foundUser = mockUsers.find(u => u.email === email && u.password === password)
+    if (foundUser) {
+      const { password: _, ...userWithoutPassword } = foundUser
+      setUser(userWithoutPassword)
+      localStorage.setItem('user', JSON.stringify(userWithoutPassword))
+      return { success: true, user: userWithoutPassword }
+    }
+    return { success: false, error: 'Invalid email or password' }
+  }
+
+  const signup = (name, email, password) => {
+    // Check if user already exists
+    if (mockUsers.find(u => u.email === email)) {
+      return { success: false, error: 'User with this email already exists' }
+    }
+    
+    const newUser = {
+      id: `u${Date.now()}`,
+      name,
+      email,
+      password,
+      role: 'user'
+    }
+    
+    mockUsers.push(newUser)
+    const { password: _, ...userWithoutPassword } = newUser
+    setUser(userWithoutPassword)
+    localStorage.setItem('user', JSON.stringify(userWithoutPassword))
+    return { success: true, user: userWithoutPassword }
+  }
+
+  const logout = () => {
+    setUser(null)
+    localStorage.removeItem('user')
+  }
+
+  const updateUserProfile = (updatedData) => {
+    const updatedUser = { ...user, ...updatedData }
+    setUser(updatedUser)
+    localStorage.setItem('user', JSON.stringify(updatedUser))
+    // Update in mockUsers array
+    const userIndex = mockUsers.findIndex(u => u.id === user.id)
+    if (userIndex !== -1) {
+      mockUsers[userIndex] = { ...mockUsers[userIndex], ...updatedData }
+    }
+  }
+
   const value = {
     businesses: filteredBusinesses,
     allBusinesses: businesses,
     reviews,
     user,
+    isAuthenticated: !!user,
     filters,
     updateFilters,
     addReview,
     updateReviewStatus,
     getBusinessReviews,
-    getPendingReviews
+    getPendingReviews,
+    login,
+    signup,
+    logout,
+    updateUserProfile
   }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>
